@@ -1,0 +1,17 @@
+{
+  "name": "wUnit",
+  "authors": [
+    "cristcost <cristiano.costantini@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#~1.1.3"
+  }
+}

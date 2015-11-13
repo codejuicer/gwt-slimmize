@@ -1,0 +1,81 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<dom-module id="wunit-game">
+  <template>
+    <style>
+      :host {display:block; border: 1px solid #444; padding: 3px;border-radius: 4px; margin: 5px 0px;}
+      #game-info, #game-controls {padding: 3px; margin: 3px; }
+      table {border: 1px dashed #888; width: 100%;}
+    </style>
+    <h3>Game Status</h3>
+    <div id="game-info">
+      <table>
+       <tr><td>Turn: <span>{{turn}}</span></td><td>Phase: <span>{{phase}}</span></td><td>Current Faction: <span>{{side}}</span></td></tr>
+       <tr><td><span>{{sideAStatus}}</span></td><td><span>{{distanceStatus}}</span></td><td><span>{{sideBStatus}}</span></td></tr>
+     </table>
+    <div id="game-controls">
+      <button disabled="{{startable}}" type="button" class="btn btn-default" on-click="startClick">Start</button>
+      <button disabled="{{playable}}" type="button" class="btn btn-default" on-click="play1Click">Play 1</button>
+      <button disabled="{{playable}}" type="button" class="btn btn-default" on-click="playAllClick">Play All</button>
+      <button disabled="{{resettable}}" type="button" class="btn btn-default" on-click="resetClick">Reset</button>
+    <div>
+  </div>
+  </template>
+  <script>
+
+    WunitFight = Polymer({
+      is: 'wunit-game',
+      properties: {
+        phase: {type: String, value: "-"},
+        startable:{type: String, computed: '_startable(phase)'},
+        playable:{type: String, computed: '_playable(phase)'},
+        resettable:{type: String, computed: '_resettable(phase)'},
+        sideAStatus: {type: String, computed: '_sideStatus(sideAName, sideASize)'},
+        sideBStatus: {type: String, computed: '_sideStatus(sideBName, sideBSize)'},
+        distanceStatus: {type: String, computed: '_distanceStatus(distance)'}
+      },
+      _startable: function(phase) {return (phase=="Deployment")?"":"Disabled";},
+      _playable: function(phase) {return (phase=="Assault"||phase=="Movement"||phase=="Psychic"||phase=="Shooting" )?"":"Disabled";},
+      _resettable: function(phase) {return phase=="Game Ended"?"":"Disabled";},
+      _sideStatus: function(name,size) { 
+        if(name && size != 0) {
+          return name + " - " + size;
+        } else if(name && size == 0) {
+          return name + " - destroyed";
+        } else {
+          return "-";
+        }
+      },
+      _distanceStatus: function(distance) { return distance!=null?(distance+ "\""):"-";},
+      startClick: function() {
+        if(this.gameController) {
+          this.gameController.start();
+        } else {
+          console.log("gameController has not been set");
+        }
+      },
+      play1Click: function() {
+        if(this.gameController) {
+          this.gameController.play1();
+        } else {
+          console.log("gameController has not been set");
+        }
+      },
+      playAllClick: function() {
+        if(this.gameController) {
+          this.gameController.playAll();
+        } else {
+          console.log("gameController has not been set");
+        }
+      },
+      resetClick: function() {
+        alert("Not implemented yet! Please refresh...")
+        if(this.gameController) {
+          this.gameController.reset();
+        } else {
+          console.log("gameController has not been set");
+        }
+      }
+    });
+  </script> 
+</dom-module>

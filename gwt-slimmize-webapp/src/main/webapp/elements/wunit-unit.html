@@ -1,0 +1,88 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<dom-module id="wunit-unit">
+	<template>
+		<style>
+		:host {display:block; border: 1px solid #444; padding: 3px;border-radius: 4px; margin: 5px 0px;}
+		elements { display: table; border: 1px dashed #444; padding: 3px;}
+		header { display: table-row; border: 1px solid #444; padding: 3px; margin: 3px;}
+		header-cell { display: table-cell; border: 1px dashed #888; padding: 3px; margin: 3px; font-weight: bold;}
+		</style>
+		<h3>{{name}}</h3>
+		<elements>
+			<header>
+				<header-cell>Qty</header-cell>
+				<header-cell>Name</header-cell>
+				<header-cell>Type</header-cell>
+				<header-cell>Ws</header-cell>
+				<header-cell>Bs</header-cell>
+				<header-cell>S</header-cell>
+				<header-cell>T</header-cell>
+				<header-cell>W</header-cell>
+				<header-cell>I</header-cell>
+				<header-cell>A</header-cell>
+				<header-cell>Ld</header-cell>
+				<header-cell>Save</header-cell>
+				<header-cell>Wargear</header-cell>
+				<header-cell>Special Rules</header-cell>
+			</header>
+			<content select="wunit-unit-element"></content>
+		</elements>
+	</template>
+	<script>
+	  WunitUnit = Polymer({
+	  	is: 'wunit-unit',
+	  	clear: function() {
+	  		while (Polymer.dom(this).firstChild) {
+			    Polymer.dom(this).removeChild(Polymer.dom(this).firstChild);
+			}
+	  	},
+	  	addNew: function() {
+	  		var el = document.createElement("wunit-unit-element");
+	  		Polymer.dom(this).appendChild(el);
+	  		return el;
+	  	} 
+	  });
+	</script>
+</dom-module>
+
+<dom-module id="wunit-unit-element">
+  <style>
+    :host { display: table-row; border: 1px solid #444; padding: 3px; margin: 3px;}
+    cell { display: table-cell; border: 1px solid #888; padding: 3px; margin: 3px;}
+  </style>
+
+  <template>
+    <cell>{{qty}}</cell>
+    <cell>{{name}}</cell>
+    <cell>{{type}}</cell>
+    <cell>{{ws}}</cell>
+    <cell>{{bs}}</cell>
+    <cell>{{s}}</cell>
+    <cell>{{t}}</cell>
+    <cell>{{w}}</cell>
+    <cell>{{i}}</cell>
+    <cell>{{a}}</cell>
+    <cell>{{ld}}</cell>
+    <cell>{{save}}</cell>
+    <cell id="wargears"><content select="wargear"></content></cell>
+    <cell id="rules"><content select="special-rules"></content></cell>
+  </template>
+  <script>
+    WunitUnitElement = Polymer({
+    	is: 'wunit-unit-element',
+   		addWargear: function(id,wargearName){
+   			var el = document.createElement("a");
+   			el.textContent = wargearName;
+   			el.setAttribute("href", id);
+	  		Polymer.dom(this.$.wargears).appendChild(el);
+   		},
+    	addRule: function(id, ruleName) {
+   			var el = document.createElement("a");
+    		el.textContent = ruleName;
+    		el.setAttribute("href", id);
+	  		Polymer.dom(this.$.rules).appendChild(el);
+    	}
+    	});
+  </script>
+</dom-module>

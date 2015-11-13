@@ -1,0 +1,428 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<dom-module id="wunit-log">
+  <template>
+    <style>
+    :host {display:block; border: 1px solid #444; padding: 3px; border-radius: 4px; margin: 5px 0px 200px; }
+    #logs {/*max-height: 400px; overflow: auto;*/}
+    </style>
+    <h3>Match Log</h3>
+    <div id="logs">
+      <content select="wunit-phase"></content>
+    </div>
+  </template>
+  <script>
+    var _addDice = function(score, success, fail, rerolled) { 
+      var diceEl = document.createElement("wunit-dice");
+      diceEl.textContent = score;
+      diceEl.success = success;
+      diceEl.fail = fail;
+      diceEl.rerolled = rerolled;
+      Polymer.dom(this.diceRollsElement).appendChild(diceEl);
+      diceEl.ready();
+      return this;
+    };
+    var _addKill = function(name) { 
+      var resultEl = document.createElement("wunit-kill");
+      resultEl.name = name;
+      Polymer.dom(this.resultElement).appendChild(resultEl);
+      resultEl.ready();
+      return this;
+    };
+    var _addWound = function(name, damage, actual) { 
+      var resultEl = document.createElement("wunit-wound");
+      resultEl.name = name;
+      resultEl.damage = damage;
+      resultEl.actual = actual;
+      Polymer.dom(this.resultElement).appendChild(resultEl);
+      resultEl.ready();
+      return this;
+    };
+
+    WunitFight = Polymer({
+      is: 'wunit-log',
+      clear: function() {
+          while (Polymer.dom(this).firstChild) {
+            Polymer.dom(this).removeChild(Polymer.dom(this).firstChild);
+          }
+      },
+      startNewPhase: function(faction, turn, phase) {
+        var el = document.createElement("wunit-phase");
+        el.turn = turn;
+        el.side = faction;
+        el.sideLink = "#"+faction;
+        el.phase = phase;
+        Polymer.dom(this).appendChild(el);
+        // Polymer.dom(this).insertBefore(el, Polymer.dom(this).firstChild);
+        return el;
+      },
+      createLog: function(elementTag) {
+        var el = document.createElement(elementTag);
+        Polymer.dom(this).lastChild.appendChild(el);
+        // Polymer.dom(this).firstChild.insertBefore(el,Polymer.dom(this).firstChild.firstChild);
+        return el;
+      },
+      appendPreStartSequenceLog: function(deployWinner, deployFirst, startFirst){
+        var el = this.createLog("wunit-event-start");
+        el.deployWinner = deployWinner;
+        el.deployFirst = deployFirst;
+        el.startFirst = startFirst;
+        var diceARolls = document.createElement("faction");
+        diceARolls.setAttribute("class", "a");
+        Polymer.dom(el).appendChild(diceARolls);
+        var diceBRolls = document.createElement("faction");
+        diceBRolls.setAttribute("class", "b");
+        Polymer.dom(el).appendChild(diceBRolls);
+
+        return {
+          factionARolls: {diceRollsElement:diceARolls,addDice: _addDice},
+          factionBRolls: {diceRollsElement:diceBRolls,addDice: _addDice}
+        }       
+      },
+      appendMovementLog: function(side, distance, charge, run, advance, stationary, retreat){
+        var el = this.createLog("wunit-event-move");
+        el.side = side;
+        el.distance = distance;
+        el.charge = charge;
+        el.run = run;
+        el.advance = advance;
+        el.stationary = stationary;
+        el.retreat = retreat;
+        return { diceRollsElement:el ,addDice: _addDice};
+      },
+      appendShootLog: function(side, bs, wargearId, wargearName, overwatch){
+        var el = this.createLog("wunit-event-shoot");
+        el.side = side;
+        el.bs = bs;
+        el.wargearId = wargearId;
+        el.wargearName = wargearName;
+        el.overwatch = overwatch;
+        return { diceRollsElement:el ,addDice: _addDice};
+      },
+      appendFightLog: function(side, initiative, attackerWs, targetWs){
+        var el = this.createLog("wunit-event-fight");
+        el.side = side;
+        el.initiative = initiative;
+        el.attackerWs = attackerWs;
+        el.targetWs = targetWs;
+        return { diceRollsElement:el ,addDice: _addDice};
+      },
+      appendWoundLog: function(side, strength, toughness){
+        var el = this.createLog("wunit-event-wound");
+        el.side = side;
+        el.strength = strength;
+        el.toughness = toughness;
+        return { diceRollsElement:el ,addDice: _addDice};
+      },
+      appendSaveLog: function(side, save, armour, cover, invulerable){
+        var el = this.createLog("wunit-event-save");
+        el.side = side;
+        el.save = save;
+        el.armour = armour;
+        el.cover = cover;
+        el.invulerable = invulerable;
+        return { diceRollsElement:el ,addDice: _addDice};
+      },
+      appendResultLog: function(side, kills){
+        var el = this.createLog("wunit-event-result");
+        el.side = side;
+        el.kills = kills;
+        return { resultElement:el, addKill: _addKill, addWound: _addWound};
+      },
+      appendEndGameLog: function(winner){
+        var el = this.createLog("wunit-event-end");
+        el.winner = winner;
+      }
+    });
+  </script> 
+</dom-module>
+
+<dom-module id="wunit-phase">
+  <template>
+    <style>
+      :host { display: block; border: 1px solid #444; padding: 3px; margin: 3px; position: relative;}
+      turn {float: left; width: 160px;}
+    </style>
+    <turn>
+      <number>{{turn}}</number> <side><a href="{{sideLink}}">{{side}}</a></side> <phase>{{phase}}</phase> phase
+    </turn>
+    <content select="*"></content>
+  </template>
+  <script>
+    WunitFight = Polymer({
+      is: 'wunit-phase'
+    });
+  </script>
+</dom-module>
+
+<dom-module id="wunit-dice">
+  <template>
+    <style>
+      :host {
+        display: inline-block;
+        width: 22px;
+        height:22px;
+        margin: 3px 6px;
+        border: 1px solid #888;
+        background-color: #ddd;
+        border-radius: 3px;
+        text-align: center;
+        float:right;
+        box-shadow: 2px 2px 1px 0px rgba(0,0,0,0.50);
+      }
+    </style>
+    <content></content>
+  </template>
+  <script>
+    WunitDice = Polymer({
+      is: 'wunit-dice',
+      properties: {
+        fail: {type: Boolean, value: false},
+        rerolled: {type: Boolean, value: false},
+        success: {type: Boolean, value: false}
+      },
+      ready: function() {
+        if(this.rerolled) {
+          this.style.backgroundColor = '#aaa';
+          this.style.borderColor = '#888';
+          this.style.textDecoration = 'line-through';
+        } else if(this.success) {          
+          this.style.backgroundColor = '#afa';
+          this.style.borderColor = '#080';
+        } else if(this.fail) {          
+          this.style.backgroundColor = '#faa';
+          this.style.borderColor = '#800';
+        }
+        this.style.transform = 'rotate(' +Math.floor((Math.random() * 17) - 8) + 'deg)';
+      }
+    });
+  </script>
+</dom-module>
+
+<dom-module id="wunit-wound">
+  <template>
+      <style>
+      :host {
+        display: inline-block;
+        float:right;
+        padding: 2px;
+        margin: 3px 3px;
+        border: 1px solid #999;
+        background-color: #777;
+        color: #eee;
+        border-radius: 4px;
+        box-shadow: 2px 2px 1px 0px rgba(0,0,0,0.50);
+      }
+      :host a:link {
+        color: #f0d8c0;
+      }
+      </style>
+      <span><a href="#">{{name}}</a></span> <span>{{damage}}</span> wounds (<span>{{actual}}</span>)
+  </template>
+  <script>
+    WunitWound = Polymer({is: 'wunit-wound'});
+  </script>
+</dom-module>
+<dom-module id="wunit-kill">
+  <template>
+      <style>
+      :host {
+        display: inline-block;
+        float:right;
+        padding: 2px;
+        margin: 3px 3px;
+        border: 1px solid #888;
+        background-color: #444;
+        color: #eee;
+        border-radius: 3px;
+        box-shadow: 2px 2px 1px 0px rgba(0,0,0,0.50);
+      }
+      :host a:link {
+        color: #fcc;
+      }
+      </style>
+      <span><a href="#">{{name}}</a></span> killed
+  </template>
+  <script>
+    WunitKill = Polymer({is: 'wunit-kill'});
+  </script>
+</dom-module>
+
+
+
+
+<dom-module id="wunit-event-start">
+  <template>
+      <style>
+      :host {display: block; border: 1px dashed #888;margin-left: 180px; clear: right;}
+      :host:after {content:"";display:table;clear:both;}
+      result {display: block; margin-left:50px; border-top: 1px solid #ccc; clear: right;}
+      </style>
+      Game starts, <span><a href="#">{{deployFirst}}</a></span> deploy first, <span><a href="#">{{startFirst}}</a></span> get first turn
+      <result>Faction A: <span id="side-a"><content select="faction.a"></content></span></result>
+      <result>Faction B: <span id="side-b"><content select="faction.b"></content></span></result>
+  </template>
+  <script>
+    WunitEventMove = Polymer({
+      is: 'wunit-event-start',
+      properties: {
+        deployFirst: {type: String, value: "-"},
+        startFirst: {type: String, value: "-"}
+      },
+    });
+  </script>
+</dom-module>
+
+<dom-module id="wunit-event-move">
+  <template>
+      <style>
+      :host {display: block; border: 1px dashed #888;margin-left: 180px; clear: right;}
+      :host:after {content:"";display:table;clear:both;}
+      </style>
+      <span>{{side}}</span> <span>{{action}}</span> <span>{{description}}</span> <span>{{distanceDescription}}</span> <content select="wunit-dice"></content>
+  </template>
+  <script>
+    WunitEventMove = Polymer({
+      is: 'wunit-event-move',
+      properties: {
+        run: {type: Boolean, value: false},
+        charge: {type: Boolean, value: false},
+        advance: {type: Boolean, value: false},
+        retreat: {type: Boolean, value: false},
+        description: {type: String, computed: '_description(advance,retreat)'},
+        distanceDescription: {type: String, computed: '_distanceDescription(distance)'},
+        action: {type: String, computed: '_action(run,charge)'}
+      },
+      _distanceDescription(distance) {
+        return distance!=null?(distance +" inches"):"";
+      },
+      _description(advance,retreat) {
+        return advance?"advances":(retreat?"retreats":"stays still");
+      },
+      _action(run,charge) {
+        return run?"runs and":(charge?"charges and":"");
+      }
+    });
+  </script>
+</dom-module>
+
+<dom-module id="wunit-event-shoot">
+  <template>
+    <style>
+      :host {display: block; border: 1px dashed #888;margin-left: 180px; clear: right;}
+      :host:after {content:"";display:table;clear:both;}
+      overwatch {font-style: italic;}
+    </style>
+    <span>{{side}}</span> shoots <overwatch>{{overwatchDesc}}</overwatch> with <a href="{{wargearId}}">{{wargearName}}</a></span> <span>{{description}}</span><content select="wunit-dice"></content>
+  </template>
+  <script>
+    WunitEventShoot = Polymer({
+      is: 'wunit-event-shoot',
+      properties: { 
+        overwatch: {type: Boolean, value: false},
+        overwatchDesc: {type: String, computed: '_overwatchDesc(overwatch)'},
+        description: {type: String, computed: '_description(bs)'}
+      },
+      _description: function(bs) { return "Attacking at BS:" + bs},
+      _overwatchDesc: function(overwatch) { return overwatch?"in overwatch":""}
+    });
+  </script>
+</dom-module>
+
+<dom-module id="wunit-event-wound">
+  <template>
+    <style>
+    :host {display: block; border: 1px dashed #888;margin-left: 180px; clear: right;}
+    :host:after {content:"";display:table;clear:both;}
+    </style>
+    <span>{{side}}</span> wounds with strength <strength>{{strength}}</strength> on toughness <toughness>{{toughness}}</toughness><content select="wunit-dice"></content>
+  </template>
+  <script>
+    WunitEventWound = Polymer({is: 'wunit-event-wound'});
+  </script>
+</dom-module>
+
+<dom-module id="wunit-event-save">
+  <template>
+      <style>
+      :host {display: block; border: 1px dashed #888;margin-left: 180px; clear: right;}
+      :host:after {content:"";display:table;clear:both;}
+      </style>
+      <span>{{side}}</span> saves using <span>{{saveType}}</span> on <save>{{save}}</save>+ <content select="wunit-dice"></content>
+  </template>
+  <script>
+    WunitEventSave = Polymer({
+      is: 'wunit-event-save',
+      properties: { 
+        armour: {type: Boolean, value: false},
+        cover: {type: Boolean, value: false},
+        invulnerable: {type: Boolean, value: false},
+        saveType: {type: String, computed: '_saveType(armour,cover,invulnerable)'}
+      },
+      _saveType: function(armour,cover,invulnerable) {
+        if(armour) return "Armour";
+        else if(cover) return "Cover";
+        else if(invulnerable) return "Invulnerable";
+        return "???"
+      }
+    });
+  </script>
+</dom-module>
+
+<dom-module id="wunit-event-fight">
+  <template>
+      <style>
+      :host {display: block; border: 1px dashed #888;margin-left: 180px; clear: right;}
+      :host:after {content:"";display:table;clear:both;}
+      </style>
+      <span>{{side}}</span> fights at initiative <span>{{initiative}}</span> <attacker>{{attackerDesc}}</attacker> <target>{{targetDesc}}</target><content select="wunit-dice"></content>
+  </template>
+  <script>
+    WunitEventFight = Polymer({
+      is: 'wunit-event-fight',
+      properties: {
+        attackerDesc: {type: String, computed: '_attackerDesc(attackerWs)'},
+        targetDesc: {type: String, computed: '_targetDesc(targetWs)'}
+      },
+      _attackerDesc: function(attackerWs){ return "Attacking at WS:" + attackerWs},
+      _targetDesc: function(targetWs){ return "Defending at WS:" + targetWs}
+    });
+  </script>
+</dom-module>
+
+<dom-module id="wunit-event-result">
+  <template>
+      <style>
+      :host {display: block; border: 1px dashed #888;margin-left: 180px; clear: right;}
+      :host:after {content:"";display:table;clear:both;}
+      winner {font-weight: bold;}
+      </style>
+      <span>{{side}}</span> <span>{{killsDesc}}</span> <content select="wunit-kill, wunit-wound"></content>
+  </template>
+  <script>
+    WunitEventResult = Polymer({
+      is:'wunit-event-result',
+      properties: { 
+        killsDesc: {type: String, computed: '_killsDesc(kills)'}
+      },
+      _killsDesc: function(kills) {
+        if(kills) return "killed " + kills + " enemy models";
+        else return " inflicted wounds:";
+      }
+    });
+  </script>
+</dom-module>
+
+
+<dom-module id="wunit-event-end">
+  <template>
+      <style>
+      :host {display: block; border: 1px dashed #888;margin-left: 180px; clear: right;}
+      :host:after {content:"";display:table;clear:both;}
+      </style>
+      The winner is <winner><a href="#">{{winner}}</a></winner>
+  </template>
+  <script>
+    WunitEventResult = Polymer({is:'wunit-event-end' });
+  </script>
+</dom-module>
